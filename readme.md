@@ -3,10 +3,11 @@
 
 This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It supports tweet translation using DeepL (now replaced by [FixTweet](https://github.com/FixTweet/FixTweet)) for better Discord embeds, and replaces the tweet links for improved presentation. Note that Nitter RSS isn't supported by all instances — you can find a list of supported instances [here](https://status.d420.de/).
 
-## Changelogs
+## Changes in this fork
 - Added web panel for easier configurations (`localhost:3000`)
 - Limited to checking for new posts (Replies & Retweets are currently disabled)
 - Removed DeepL Translator since supports translations [FixTweet](https://github.com/FixTweet/FixTweet).
+- 1s Delays between every Webhook
 
 ## Usage
 

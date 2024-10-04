@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 
-const { settings, feeds, customMessage } = require('./settings.json');
+const { settings, feeds } = require('./settings.json');
 const parser = new rss();
 const app = express();
 const settingsPath = path.join(__dirname, 'settings.json');
@@ -15,7 +15,8 @@ const DEBUG = false;
 let lastUpdated = new Date();
 let latestCheckedFeedItemDate = lastUpdated;
 let WebhookUrl = settings.webhook;
-let translateEnabled = '';
+let translateEnabled;
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 if (DEBUG) {
     console.log(chalk.bgGreen('DEBUG MODE'));
@@ -45,7 +46,7 @@ async function handleFeed(feed) {
         
         for (const item of parsed.items.reverse()) {
             const itemDate = new Date(item.pubDate);
-            if (itemDate > lastUpdated && !isRetweet(item, feed.username)) {
+            if (itemDate > lastUpdated && !isRetweet(item)) {
                 await handleFeedItem(item, feed, username, avatarUrl);
                 latestCheckedFeedItemDate = Math.max(latestCheckedFeedItemDate, itemDate);
             }
@@ -55,9 +56,10 @@ async function handleFeed(feed) {
     }
 }
 
-function isRetweet(item, username) {
-    return item.title.startsWith(`R by @${username}`) || item.title.startsWith(`RT by @${username}`);
+function isRetweet(item) {
+    return item.title.startsWith(`R to`) || item.title.startsWith(`RT by`);
 }
+
 
 async function sendMessageToWebhook(message, webhook, username, avatarUrl) {
     try {
@@ -67,6 +69,7 @@ async function sendMessageToWebhook(message, webhook, username, avatarUrl) {
             avatar_url: avatarUrl,
         });
         console.log(chalk.green.underline(`Sent message to ${webhook}`));
+        await delay(5000);
     } catch (err) {
         console.error(err);
     }
@@ -90,7 +93,7 @@ async function checkAllFeeds() {
 
 async function handleFeedItem(feedItem, feed, username, avatarUrl) {
     const message = await buildMessageFromFeed(feedItem, feed);
-    sendMessageToWebhook(message, WebhookUrl, username, avatarUrl);
+   await sendMessageToWebhook(message, WebhookUrl, username, avatarUrl);
 }
 
 async function buildMessageFromFeed(feedItem, feed) {
@@ -98,12 +101,11 @@ async function buildMessageFromFeed(feedItem, feed) {
     fxTwitterLink.hostname = 'fxtwitter.com';
     fxTwitterLink.hash = '';
 
-    return `${customMessage || ''}[Tweeted](${fxTwitterLink + translateEnabled})`;
+    return `${settings.customMessage}\n[Tweeted](${fxTwitterLink + translateEnabled})`;
 }
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// Web server routes
+// Web server 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
