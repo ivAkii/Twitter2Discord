@@ -1,17 +1,22 @@
 {
-  "name": "twitter-rss-discord-webhook",
+  "name": "twitter2discord",
   "version": "1.0.0",
-  "description": "",
+  "description": "This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. Notably, this script supports translation of the tweets using DeepL and replaces the tweet links with [fxtwitter/FixTweet](https://github.com/FixTweet/FixTweet) for better Discord embeds. Note that Nitter RSS is not supported by every instance of Nitter - you can view a list of supported instances [here](https://status.d420.de/).",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["Twitter","Discord"],
+  "author": "ivAkii",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.5.0",
-    "rss-parser": "^3.13.0"
+    "body-parser": "^1.20.3",
+    "chalk": "^4.1.0",
+    "express": "^4.21.0",
+    "fs": "^0.0.1-security",
+    "nodemon": "^3.1.7",
+    "rss-parser": "^3.13.0",
+    "socket.io": "^4.8.0"
   }
 }

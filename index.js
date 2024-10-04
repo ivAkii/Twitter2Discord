@@ -1,137 +1,141 @@
 const axios = require('axios');
 const rss = require('rss-parser');
-const { settings, feeds } = require('./settings.json');
+const chalk = require('chalk');
+const fs = require('fs');
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
 
+const { settings, feeds, customMessage } = require('./settings.json');
 const parser = new rss();
+const app = express();
+const settingsPath = path.join(__dirname, 'settings.json');
 
+const DEBUG = false;
 let lastUpdated = new Date();
 let latestCheckedFeedItemDate = lastUpdated;
-const DEBUG = false;
+let WebhookUrl = settings.webhook;
+let translateEnabled = '';
+
 if (DEBUG) {
-  console.log('DEBUG MODE');
-  // move lastUpdated back
-  // lastUpdated = new Date(lastUpdated.getTime() - 20 * 60 * 1000);
-  latestCheckedFeedItemDate = lastUpdated;
-  settings.interval_minutes = 0.5;
+    console.log(chalk.bgGreen('DEBUG MODE'));
+    lastUpdated = new Date(lastUpdated.getTime() - 20 * 60 * 1000);
+    settings.interval_minutes = 0.5;
+}
+
+if (settings.singleWebhook) {
+    console.log(chalk.green.underline("SingleWebhook: True"));
+} else {
+    console.log(chalk.yellow.underline("SingleWebhook: False\nUsing specific webhook for each feed."));
 }
 
 setInterval(() => {
-  checkAllFeeds();
-  // Update the last updated time
-  lastUpdated = latestCheckedFeedItemDate;
+    checkAllFeeds();
+    lastUpdated = latestCheckedFeedItemDate;
 }, 60 * 1000 * settings.interval_minutes);
+
 checkAllFeeds();
 
-// Reads a feed and sends a message to the webhook
-function handleFeed(feed) {
-  // Get the feed
-  const url = feed.rss;
-  // Fetch the feed
-  parser.parseURL(url, async (err, parsed) => {
-    if (err) {
-      console.error(err);
-      return;
+async function handleFeed(feed) {
+    const url = `https://nitter.poast.org/${feed.username}/rss`;
+    try {
+        const parsed = await parser.parseURL(url);
+        const username = parsed.image.title;
+        const avatarUrl = parsed.image.url.replace(/nitter\.poast\.org\/pic\//, '').replace(/%2F/g, '/');
+        
+        for (const item of parsed.items.reverse()) {
+            const itemDate = new Date(item.pubDate);
+            if (itemDate > lastUpdated && !isRetweet(item, feed.username)) {
+                await handleFeedItem(item, feed, username, avatarUrl);
+                latestCheckedFeedItemDate = Math.max(latestCheckedFeedItemDate, itemDate);
+            }
+        }
+    } catch (err) {
+        console.error(err);
     }
-    // Iterate through feed items from oldest to newest
-    for (const item of parsed.items.reverse()) {
-      const itemDate = new Date(item.pubDate);
-      // console.log(`Checking ${item.title} from ${itemDate} against ${lastUpdated}...`);
-      // Check if the item is newer than the last updated time
-      if (itemDate > lastUpdated) {
-        handleFeedItem(item, feed);
-        latestCheckedFeedItemDate = Math.max(latestCheckedFeedItemDate, itemDate);
-      }
+}
+
+function isRetweet(item, username) {
+    return item.title.startsWith(`R by @${username}`) || item.title.startsWith(`RT by @${username}`);
+}
+
+async function sendMessageToWebhook(message, webhook, username, avatarUrl) {
+    try {
+        await axios.post(webhook, {
+            content: message,
+            username: username,
+            avatar_url: avatarUrl,
+        });
+        console.log(chalk.green.underline(`Sent message to ${webhook}`));
+    } catch (err) {
+        console.error(err);
     }
-  });
 }
 
-function sendMessageToWebhook(message = '', webhook) {
-  axios
-    .post(webhook, {
-      content: message,
-    })
-    .then(() => {
-      console.log(`Sent ${message} to ${webhook}`);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+async function checkAllFeeds() {
+    console.log(chalk.green.underline("Running checkAllFeeds Module..."));
+
+    for (let feedIndex = 0; feedIndex < feeds.length; feedIndex++) {
+        const feed = feeds[feedIndex];
+        console.log(`${feedIndex + 1}.User: ${feed.username}\nChecking feeds at ${new Date()}...\n`);
+
+        translateEnabled = feed.translate ? 'en' : '';
+
+        await handleFeed(feed);
+        await delay(settings.seconds_between_feeds * 1000);
+    }
+
+    console.log(chalk.blue(`All feeds checked. Sleeping for ${settings.interval_minutes} minutes...`));
 }
 
-function checkAllFeeds() {
-  console.log(
-    `Checking feeds at ${new Date()}; last updated at ${lastUpdated} and latest checked feed item date at ${latestCheckedFeedItemDate}...`
-  );
-  for (const feed of feeds) {
-    // wait settings.seconds_between_feeds seconds between each feed
-    setTimeout(() => {
-      handleFeed(feed);
-    }, settings.seconds_between_feeds * 1000);
-  }
-}
-
-// Reads and sends a message for a feed item
-async function handleFeedItem(feedItem, feed) {
-  const message = await buildMessageFromFeed(feedItem, feed);
-  sendMessageToWebhook(message, feed.webhook);
+async function handleFeedItem(feedItem, feed, username, avatarUrl) {
+    const message = await buildMessageFromFeed(feedItem, feed);
+    sendMessageToWebhook(message, WebhookUrl, username, avatarUrl);
 }
 
 async function buildMessageFromFeed(feedItem, feed) {
-  let messageString = '';
-  // Get the title and link
-  const title = feedItem.title;
-  const creator = feedItem.creator;
-  const link = feedItem.link;
-  const itemDate = new Date(feedItem.pubDate);
+    const fxTwitterLink = new URL(feedItem.link);
+    fxTwitterLink.hostname = 'fxtwitter.com';
+    fxTwitterLink.hash = '';
 
-  // replace link with fxtwitter
-  const fxTwitterLink = new URL(link);
-  fxTwitterLink.hostname = 'fxtwitter.com';
-  fxTwitterLink.hash = '';
-
-  // Build the message
-  messageString += `${creator} posted on <t:${itemDate.valueOf() / 1000}>\n`;
-  messageString += title + '\n';
-  messageString += fxTwitterLink + '\n';
-
-  // add translation if needed
-  if (feed.translate) {
-    // get translation from deepl free
-    const translation = await translate(feedItem.contentSnippet, feed.translate);
-    if (translation) messageString += `\`\`\`${translation}\`\`\`\n`;
-  }
-  return messageString;
+    return `${customMessage || ''}[Tweeted](${fxTwitterLink + translateEnabled})`;
 }
 
-// Translate a string and return the translation
-async function translate(text, lang) {
-  var myHeaders = new Headers();
-  myHeaders.append('Authorization', `DeepL-Auth-Key ${settings.deepl_api_key}`);
-  myHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-  var urlencoded = new URLSearchParams();
-  urlencoded.append('text', text);
-  urlencoded.append('target_lang', lang);
+// Web server routes
+app.use(bodyParser.json());
+app.use(express.static('public'));
 
-  var requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: urlencoded,
-    redirect: 'follow',
-  };
+app.get('/settings', (req, res) => {
+    fs.readFile(settingsPath, 'utf-8', (err, data) => {
+        if (err) {
+            return res.status(500).send('Error reading settings file');
+        }
+        res.send(data);
+    });
+});
 
-  // fetch and return response text
-  const response = await fetch('https://api-free.deepl.com/v2/translate', requestOptions);
-  const result = await response.text();
-  try {
-    const json = JSON.parse(result);
-    // if the detected source language is the same as the target language, return null
-    if (json.translations[0]?.detected_source_language.toLowerCase() === lang.toLowerCase()) {
-      return null;
+app.post('/update-settings', (req, res) => {
+    fs.writeFile(settingsPath, JSON.stringify(req.body, null, 2), err => {
+        if (err) {
+            return res.status(500).send('Error writing settings file');
+        }
+        res.send('Settings updated successfully');
+    });
+});
+
+app.post('/test-webhook', (req, res) => {
+    const { message, webhook, username, avatarUrl } = req.body;
+
+    if (!webhook) {
+        return res.status(400).send('Webhook URL is required');
     }
-    return json.translations[0]?.text;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
+
+    sendMessageToWebhook(message, webhook, username || 'Test User', avatarUrl || null);
+    res.send(`Test message sent to webhook: ${webhook}`);
+});
+
+app.listen(3000, () => {
+    console.log('Webpanel is up and running!');
+});

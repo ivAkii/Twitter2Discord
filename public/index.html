@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Editor</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { max-width: 800px; margin: auto; }
+    input, select { width: 100%; margin: 10px 0; padding: 10px; }
+    button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .feed-block { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; background-color: #f9f9f9; border-radius: 5px; }
+    .feed-title { font-weight: bold; font-size: 1.2em; margin-bottom: 5px; cursor: pointer; }
+    .remove-feed { background-color: #e74c3c; }
+    .remove-feed:hover { background-color: #c0392b; }
+    .settings-section, .feeds-section { margin-bottom: 20px; }
+    .feed-content { display: none; }
+  </style>
+</head>
+<body>
+
+<h2>Edit Settings and Feeds</h2>
+
+<form id="settings-form">
+
+  <!-- Settings Section -->
+  <div class="settings-section">
+    <h3>General Settings</h3>
+    <label>Interval Minutes:</label>
+    <input type="number" id="interval-minutes" value="" min="1">
+    
+    <label>Seconds Between Feeds:</label>
+    <input type="number" id="seconds-between-feeds" value="" min="1">
+
+    <label>Webhook URL:</label>
+    <input type="text" id="global-webhook" value="">
+
+    <label>Webhook Test Message:</label>
+    <input type="text" id="test-webhook" value="">
+    <button type="button" class="test-webhook" onclick="testWebhook()">Test Webhook</button>
+  </div>
+
+  <label>Custom Message:</label>
+  <input type="text" id="custom-message" value="">
+  
+  <h3 id="total-feeds-count">Total Feeds: 0</h3>
+
+  <!-- Feeds Section -->
+  <div id="feeds-container" class="feeds-section"></div>
+
+  <button type="button" id="add-feed-btn">Add Feed</button>
+  <br><br>
+  <button type="submit">Save Changes</button>
+</form>
+
+<script>
+  let settings = {};
+  let feeds = [];
+
+  // Function to load the settings and display feeds in a form
+  async function loadSettings() {
+    const response = await fetch('/settings');
+    const jsonData = await response.json();
+    
+    // Populate settings fields
+    settings = jsonData.settings || {};
+    feeds = jsonData.feeds || [];
+    
+    document.getElementById('interval-minutes').value = settings.interval_minutes || '';
+    document.getElementById('seconds-between-feeds').value = settings.seconds_between_feeds || '';
+    document.getElementById('global-webhook').value = settings.webhook || '';
+    document.getElementById('custom-message').value = settings.customMessage || ''; // Set customMessage field
+
+    document.getElementById('test-webhook').value = settings.testMessage || '';
+    
+    // Display feeds in collapsible blocks
+    displayFeeds();
+  }
+
+  // Function to render the feeds in the form
+  function displayFeeds() {
+  const feedsContainer = document.getElementById('feeds-container');
+  feedsContainer.innerHTML = ''; // Clear the container before re-rendering
+
+  feeds.forEach((feed, index) => {
+    const feedBlock = document.createElement('div');
+    feedBlock.className = 'feed-block';
+
+    // If username is empty, fallback to a default "Feed" title
+    const feedTitle = feed.username || `Feed ${index + 1}`;
+
+    feedBlock.innerHTML = `
+      <div class="feed-title" onclick="toggleFeedContent(${index})">${feedTitle} (Click to expand)</div>
+      <div class="feed-content" id="feed-content-${index}">
+        <label>Username:</label>
+        <input type="text" name="username" value="${feed.username || ''}" data-index="${index}" data-field="username">
+
+        <label>Webhook URL:</label>
+        <input type="text" name="webhook" value="${feed.webhook || ''}" data-index="${index}" data-field="webhook">
+
+        <label>Translate:</label>
+        <select name="translate" data-index="${index}" data-field="translate">
+          <option value="false" ${feed.translate === 'false' ? 'selected' : ''}>False</option>
+          <option value="true" ${feed.translate === 'true' ? 'selected' : ''}>True</option>
+        </select>
+
+        <button type="button" class="remove-feed" onclick="removeFeed(${index})">Remove Feed</button>
+      </div>
+    `;
+
+    feedsContainer.appendChild(feedBlock);
+  });
+  document.getElementById('total-feeds-count').textContent = `Total Feeds: ${feeds.length}`;
+}
+
+
+  // Function to toggle feed content display
+  function toggleFeedContent(index) {
+    const feedContent = document.getElementById(`feed-content-${index}`);
+    feedContent.style.display = feedContent.style.display === 'none' ? 'block' : 'none';
+  }
+
+  // Add a new empty feed
+  document.getElementById('add-feed-btn').addEventListener('click', () => {
+    feeds.push({ username: '', webhook: '', translate: 'false' });
+    displayFeeds();
+  });
+
+  // Remove a feed by index
+  function removeFeed(index) {
+    feeds.splice(index, 1);
+    displayFeeds();
+  }
+  
+  function testWebhook() {
+  const webhookUrl = document.getElementById('global-webhook').value;
+  const testMessage = document.getElementById('test-webhook').value;
+
+  if (!webhookUrl) {
+    alert('Webhook URL is missing!');
+    return;
+  }
+
+  // You can set a default test message if none is provided
+  const messageToSend = testMessage || 'This is a test message from the settings panel.';
+
+  // Send POST request to test the webhook
+  fetch('/test-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: messageToSend,
+      webhook: webhookUrl,
+      username: 'Test User', // Use a default username for testing
+      avatarUrl: null // Optional, use null or an avatar URL if needed
+    })
+  })
+  .then(response => response.text())
+  .then(result => {
+    alert(result); // Show a success message
+  })
+  .catch(err => {
+    alert('Error sending test webhook: ' + err.message);
+  });
+}
+
+
+  // Listen for form submissions
+  document.getElementById('settings-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Update settings based on input fields
+    settings.interval_minutes = document.getElementById('interval-minutes').value;
+    settings.seconds_between_feeds = document.getElementById('seconds-between-feeds').value;
+    settings.deepl_api_key = document.getElementById('deepl-api-key').value;
+    settings.webhook = document.getElementById('global-webhook').value;
+    settings.customMessage = document.getElementById('custom-message').value;
+
+    // Update feeds based on input fields
+    document.querySelectorAll('input, select').forEach((input) => {
+      const index = input.getAttribute('data-index');
+      const field = input.getAttribute('data-field');
+      if (index !== null && field) {
+      if (field === 'translate') {
+        feeds[index][field] = input.value === 'true';
+      } else {
+        feeds[index][field] = input.value;
+      }
+    }
+    });
+
+    const updatedSettings = JSON.stringify({ settings, feeds }, null, 2);
+
+    try {
+      // Send updated settings to the server
+      const response = await fetch('/update-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: updatedSettings,
+      });
+      const result = await response.text();
+      alert(result);
+    } catch (err) {
+      alert('Error updating settings: ' + err.message);
+    }
+  });
+
+  // Load settings when the page loads
+  loadSettings();
+</script>
+
+</body>
+</html>
