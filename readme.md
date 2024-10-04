@@ -1,59 +1,70 @@
-# Twitter2Discord a fork of Twitter to Discord Webhook
 
-```Changelogs
-- Added webpanel for easier configurations (localhost:3000)
-- Only check for new posts (Reply & RT are disabled for now)
-- Removed DeepTL and replaced with Fxtwitter's Translation
-```
-This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. Notably, this script supports translation of the tweets using DeepL and replaces the tweet links with [fxtwitter/FixTweet](https://github.com/FixTweet/FixTweet) for better Discord embeds. Note that Nitter RSS is not supported by every instance of Nitter - you can view a list of supported instances [here](https://status.d420.de/).
+# Twitter2Discord: A Fork of Twitter to Discord Webhook
 
+This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It supports tweet translation using DeepL (now replaced by [FixTweet](https://github.com/FixTweet/FixTweet)) for better Discord embeds, and replaces the tweet links for improved presentation. Note that Nitter RSS isn't supported by all instances — you can find a list of supported instances [here](https://status.d420.de/).
+
+## Changelogs
+- Added web panel for easier configurations (`localhost:3000`)
+- Limited to checking for new posts (Replies & Retweets are currently disabled)
+- Removed DeepL Translator since supports translations [FixTweet](https://github.com/FixTweet/FixTweet).
 
 ## Usage
 
-- Clone this repo
-- Rename `settings.example.json` to `settings.json` with your settings. You can simply copy the example file and rename it.
-- Install dependencies: `npm install`
-- Run the script: `npm start`
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/Twitter2Discord.git
+   ```
+2. Copy `settings.example.json` and rename it to `settings.json`:
+   ```bash
+   cp settings.example.json settings.json
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the script:
+   ```bash
+   npm start
+   ```
 
-> [!IMPORTANT]
-> This script only works on Node versions 18 and above.
+> **Note:**  
+> This script requires Node.js version 18 or higher.
 
 ## Settings
 
-The `settings.json` file contains the following configuration:
+The `settings.json` file allows you to configure the following:
 
 ```json
 {
   "settings": {
     "interval_minutes": "5",
     "seconds_between_feeds": "30",
-    "webhook": "https://discord.com/api/webhooks/1290289888003887114/5TurxR31AslVTpkja-8mQhw6TZEFI_2FrlQ4ZtTfsdWr5zyTTfj8tn1HMBlAoKmG-SlK",
+    "webhook": "https://discord.com/api/webhooks/your-webhook-url",
     "customMessage": "New Post Alert!"
   },
   "feeds": [
     {
       "username": "netizenakii",
-      "webhook": "",
+      "webhook": "", // Not implemented yet
       "translate": false
     }
   ]
 }
 ```
 
-### Settings
+### Global Settings
 
-- `interval_minutes` - How often to check feeds, in minutes. Default is 5.
-- `seconds_between_feeds` - How long to wait between checking each feed, in seconds. Default is 15. This is to prevent rate limiting.
-- `webhook` - Discord webhook url.
-- `customMessage` - Custom message to send along with the new post link.
+- **`interval_minutes`**: Time interval (in minutes) to check the feeds. Default is 5 minutes.
+- **`seconds_between_feeds`**: Delay (in seconds) between checking each feed, to prevent rate limiting. Default is 30 seconds.
+- **`webhook`**: The Discord webhook URL used for posting.
+- **`customMessage`**: A custom message to send alongside the post link.
 
-### Feeds
+### Feed Settings
 
-The `feeds` array contains objects with the following properties:
+The `feeds` array allows you to define multiple feeds, each with its own settings:
 
-- `username` - The username of X(Twitter) account you want to check.
-- `webhook` - The Discord webhook URL to post to (COMING SOON).
-- `translate` - Translates posts into EN
+- **`username`**: The X (Twitter) username to fetch posts from.
+- **`webhook`**: A custom Discord webhook URL for this specific feed (feature coming soon).
+- **`translate`**: Set to `true` to translate posts to English.
 
-
-Any number of feeds can be added to the array through the webpanel.
+You can manage and add more feeds directly from the web panel.

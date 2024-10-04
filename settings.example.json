@@ -8,7 +8,7 @@
     "feeds": [
       {
         "username": "netizenakii",
-        "webhook": "",
+        "webhook": "", // Not implemented yet
         "translate": false
       }
     ]
