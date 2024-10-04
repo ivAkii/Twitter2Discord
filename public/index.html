@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<h2>Edit Settings and Feeds</h2>
+<h2>Twitter2Discord Web Panel</h2>
 
 <form id="settings-form">
 
@@ -74,7 +74,6 @@
 
     document.getElementById('test-webhook').value = settings.testMessage || '';
     
-    // Display feeds in collapsible blocks
     displayFeeds();
   }
 
@@ -87,7 +86,6 @@
     const feedBlock = document.createElement('div');
     feedBlock.className = 'feed-block';
 
-    // If username is empty, fallback to a default "Feed" title
     const feedTitle = feed.username || `Feed ${index + 1}`;
 
     feedBlock.innerHTML = `
@@ -115,7 +113,6 @@
 }
 
 
-  // Function to toggle feed content display
   function toggleFeedContent(index) {
     const feedContent = document.getElementById(`feed-content-${index}`);
     feedContent.style.display = feedContent.style.display === 'none' ? 'block' : 'none';
@@ -127,7 +124,6 @@
     displayFeeds();
   });
 
-  // Remove a feed by index
   function removeFeed(index) {
     feeds.splice(index, 1);
     displayFeeds();
@@ -142,23 +138,21 @@
     return;
   }
 
-  // You can set a default test message if none is provided
   const messageToSend = testMessage || 'This is a test message from the settings panel.';
 
-  // Send POST request to test the webhook
   fetch('/test-webhook', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: messageToSend,
       webhook: webhookUrl,
-      username: 'Test User', // Use a default username for testing
-      avatarUrl: null // Optional, use null or an avatar URL if needed
+      username: 'Test User',
+      avatarUrl: null // Optional, use null or an avatar URL
     })
   })
   .then(response => response.text())
   .then(result => {
-    alert(result); // Show a success message
+    alert(result); 
   })
   .catch(err => {
     alert('Error sending test webhook: ' + err.message);
