@@ -11,7 +11,7 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. Nota
 ## Usage
 
 - Clone this repo
-- Create a `settings.json` with your settings. You can simply copy the example file and rename it.
+- Rename `settings.example.json` to `settings.json` with your settings. You can simply copy the example file and rename it.
 - Install dependencies: `npm install`
 - Run the script: `npm start`
 
@@ -44,6 +44,8 @@ The `settings.json` file contains the following configuration:
 
 - `interval_minutes` - How often to check feeds, in minutes. Default is 5.
 - `seconds_between_feeds` - How long to wait between checking each feed, in seconds. Default is 15. This is to prevent rate limiting.
+- `webhook` - Discord webhook url.
+- `customMessage` - Custom message to send along with the new post link.
 
 ### Feeds
 

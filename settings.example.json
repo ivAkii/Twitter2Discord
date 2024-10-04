@@ -1,0 +1,15 @@
+{
+    "settings": {
+      "interval_minutes": "5",
+      "seconds_between_feeds": "30",
+      "webhook": "https://discord.com/api/webhooks",
+      "customMessage": "New Post Alert!"
+    },
+    "feeds": [
+      {
+        "username": "netizenakii",
+        "webhook": "",
+        "translate": false
+      }
+    ]
+  }
