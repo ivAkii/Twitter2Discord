@@ -11,7 +11,7 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. Nota
 ## Usage
 
 - Clone this repo
-- Create a `settings.json` file based on `settings.example.json` with your settings. You can simply copy the example file and rename it.
+- Create a `settings.json` with your settings. You can simply copy the example file and rename it.
 - Install dependencies: `npm install`
 - Run the script: `npm start`
 
