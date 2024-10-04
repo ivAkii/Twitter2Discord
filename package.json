@@ -6,7 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["Twitter","Discord"],
+  "keywords": [
+    "Twitter",
+    "Discord"
+  ],
   "author": "ivAkii",
   "license": "ISC",
   "dependencies": {
@@ -16,7 +19,6 @@
     "express": "^4.21.0",
     "fs": "^0.0.1-security",
     "nodemon": "^3.1.7",
-    "rss-parser": "^3.13.0",
-    "socket.io": "^4.8.0"
+    "rss-parser": "^3.13.0"
   }
 }
