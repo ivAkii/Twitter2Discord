@@ -15,9 +15,9 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It s
    ```bash
    git clone https://github.com/ivAkii/Twitter2Discord.git
    ```
-2. Copy `settings.example.json` and rename it to `settings.json`:
+2. Preparing the config file:
    ```bash
-   cp settings.example.json settings.json
+   Rename `settings.example.json` to `settings.json`:
    ```
 3. Install dependencies:
    ```bash
