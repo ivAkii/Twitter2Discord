@@ -6,7 +6,7 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It s
 ## Changes in this fork
 - Added web panel for easier configurations (`localhost:3000`)
 - Limited to checking for new posts (Replies & Retweets are currently disabled)
-- Removed DeepL Translator since supports translations [FixTweet](https://github.com/FixTweet/FixTweet).
+- Removed DeepL Translator since [FixTweet](https://github.com/FixTweet/FixTweet) supports translations .
 - 1s Delays between every Webhook
 
 ## Usage
