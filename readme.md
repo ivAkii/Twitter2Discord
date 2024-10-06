@@ -3,21 +3,28 @@
 
 This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It supports tweet translation using DeepL (now replaced by [FixTweet](https://github.com/FixTweet/FixTweet)) for better Discord embeds, and replaces the tweet links for improved presentation. Note that Nitter RSS isn't supported by all instances — you can find a list of supported instances [here](https://status.d420.de/).
 
+## Changelogs [10.6.2024]
+- Optimized workflow
+- Added simple login interface to web panel to prevent others from altering your data
+- Added optimized time intervals (It is highly recommended to leave this on)
+- Split the main function and express servers into two separate files
+- 
+
 ## Changes in this fork
 - Added web panel for easier configurations (`localhost:3000`)
 - Limited to checking for new posts (Replies & Retweets are currently disabled)
-- Removed DeepL Translator since [FixTweet](https://github.com/FixTweet/FixTweet) supports translations .
+- Removed DeepL Translator since supports translations [FixTweet](https://github.com/FixTweet/FixTweet).
 - 1s Delays between every Webhook
 
 ## Usage
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/ivAkii/Twitter2Discord.git
+   git clone https://github.com/yourusername/Twitter2Discord.git
    ```
-2. Preparing the config file:
+2. Copy `settings.example.json` and rename it to `settings.json`:
    ```bash
-   Rename `settings.example.json` to `settings.json`:
+   cp settings.example.json settings.json
    ```
 3. Install dependencies:
    ```bash

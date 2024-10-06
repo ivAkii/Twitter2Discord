@@ -1,194 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings Editor</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    form { max-width: 800px; margin: auto; }
-    input, select { width: 100%; margin: 10px 0; padding: 10px; }
-    button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #45a049; }
-    .feed-block { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; background-color: #f9f9f9; border-radius: 5px; }
-    .feed-title { font-weight: bold; font-size: 1.2em; margin-bottom: 5px; cursor: pointer; }
-    .remove-feed { background-color: #e74c3c; }
-    .remove-feed:hover { background-color: #c0392b; }
-    .settings-section, .feeds-section { margin-bottom: 20px; }
-    .feed-content { display: none; }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Editor</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
 
-<h2>Twitter2Discord Web Panel</h2>
+      form {
+        max-width: 800px;
+        margin: auto;
+      }
 
-<form id="settings-form">
+      input,
+      select {
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+      }
 
-  <!-- Settings Section -->
-  <div class="settings-section">
-    <h3>General Settings</h3>
-    <label for="interval-minutes">Interval Minutes:</label>
-    <input type="number" id="interval-minutes" min="1">
+      button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
 
-    <label for="seconds-between-feeds">Seconds Between Feeds:</label>
-    <input type="number" id="seconds-between-feeds" min="1">
+      button:hover {
+        background-color: #45a049;
+      }
 
-    <label for="global-webhook">Webhook URL:</label>
-    <input type="text" id="global-webhook">
+      .feed-block {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+      }
 
-    <label for="test-webhook">Webhook Test Message:</label>
-    <input type="text" id="test-webhook">
-    <button type="button" class="test-webhook" onclick="testWebhook()">Test Webhook</button>
-  </div>
+      .feed-title {
+        font-weight: bold;
+        font-size: 1.2em;
+        margin-bottom: 5px;
+        cursor: pointer;
+      }
 
-  <!-- Custom Message Section -->
-  <label for="custom-message">Custom Message:</label>
-  <input type="text" id="custom-message">
+      .remove-feed {
+        background-color: #e74c3c;
+      }
 
-  <h3 id="total-feeds-count">Total Feeds: 0</h3>
+      .remove-feed:hover {
+        background-color: #c0392b;
+      }
 
-  <!-- Feeds Section -->
-  <div id="feeds-container" class="feeds-section"></div>
+      .settings-section,
+      .feeds-section {
+        margin-bottom: 20px;
+      }
 
-  <button type="button" id="add-feed-btn">Add Feed</button>
-  <br><br>
-  <button type="submit">Save Changes</button>
-</form>
+      .feed-content {
+        display: none;
+      }
 
-<script>
-  let settings = {};
-  let feeds = [];
-  async function loadSettings() {
-    try {
-      const response = await fetch('/settings');
-      const jsonData = await response.json();
-      settings = jsonData.settings || {};
-      feeds = jsonData.feeds || [];
-      document.getElementById('interval-minutes').value = settings.interval_minutes || '';
-      document.getElementById('seconds-between-feeds').value = settings.seconds_between_feeds || '';
-      document.getElementById('global-webhook').value = settings.webhook || '';
-      document.getElementById('custom-message').value = settings.customMessage || '';
-      document.getElementById('test-webhook').value = settings.testMessage || '';
-
-      displayFeeds();
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
-  }
-
-  // Function to render the feeds in the form
-  function displayFeeds() {
-    const feedsContainer = document.getElementById('feeds-container');
-    feedsContainer.innerHTML = ''; // Clear the container before re-rendering
-
-    feeds.forEach((feed, index) => {
-      const feedBlock = document.createElement('div');
-      feedBlock.className = 'feed-block';
-
-      const feedTitle = feed.username || `Feed ${index + 1}`;
-      feedBlock.innerHTML = `
-        <div class="feed-title" onclick="toggleFeedContent(${index})">${feedTitle} (Click to expand)</div>
-        <div class="feed-content" id="feed-content-${index}">
-          <label for="username-${index}">Username:</label>
-          <input type="text" id="username-${index}" name="username" value="${feed.username || ''}" data-index="${index}" data-field="username">
-
-          <label for="webhook-${index}">Webhook URL:</label>
-          <input type="text" id="webhook-${index}" name="webhook" value="${feed.webhook || ''}" data-index="${index}" data-field="webhook">
-
-          <label for="translate-${index}">Translate:</label>
-          <select id="translate-${index}" name="translate" data-index="${index}" data-field="translate">
-            <option value="false" ${feed.translate === 'false' ? 'selected' : ''}>False</option>
-            <option value="true" ${feed.translate === 'true' ? 'selected' : ''}>True</option>
-          </select>
-
-          <button type="button" class="remove-feed" onclick="removeFeed(${index})">Remove Feed</button>
-        </div>
-      `;
-      feedsContainer.appendChild(feedBlock);
-    });
-
-    document.getElementById('total-feeds-count').textContent = `Total Feeds: ${feeds.length}`;
-  }
-
-  function toggleFeedContent(index) {
-    const feedContent = document.getElementById(`feed-content-${index}`);
-    feedContent.style.display = feedContent.style.display === 'none' ? 'block' : 'none';
-  }
-
-  // Adds a new empty feed
-  document.getElementById('add-feed-btn').addEventListener('click', () => {
-    feeds.push({ username: '', webhook: '', translate: 'false' });
-    displayFeeds();
-  });
-
-  function removeFeed(index) {
-    feeds.splice(index, 1);
-    displayFeeds();
-  }
-
-  // Test webhook 
-  async function testWebhook() {
-    const webhookUrl = document.getElementById('global-webhook').value;
-    const testMessage = document.getElementById('test-webhook').value || 'This is a test message from the settings panel.';
-
-    if (!webhookUrl) {
-      alert('Webhook URL is missing!');
-      return;
-    }
-
-    try {
-      const response = await fetch('/test-webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: testMessage, webhook: webhookUrl, username: 'Test User', avatarUrl: null })
-      });
-
-      const result = await response.text();
-      alert(result);
-    } catch (error) {
-      alert('Error sending test webhook: ' + error.message);
-    }
-  }
-
-  document.getElementById('settings-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    settings.interval_minutes = document.getElementById('interval-minutes').value;
-    settings.seconds_between_feeds = document.getElementById('seconds-between-feeds').value;
-    settings.webhook = document.getElementById('global-webhook').value;
-    settings.customMessage = document.getElementById('custom-message').value;
-
-    document.querySelectorAll('input, select').forEach((input) => {
-      const index = input.getAttribute('data-index');
-      const field = input.getAttribute('data-field');
-      if (index !== null && field) {
-        if (field === 'translate') {
-          feeds[index][field] = input.value === 'true';
-        } else {
-          feeds[index][field] = input.value;
+      .login-section {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Twitter2Discord Web Panel</h2>
+    <div id="login-section" class="login-section">
+      <h3>Login</h3>
+      <label for="username">Username:</label>
+      <input type="text" id="username">
+      <label for="password">Password:</label>
+      <input type="password" id="password">
+      <button type="button" onclick="login()">Login</button>
+      <button type="button" onclick="showRegister()">Register</button>
+    </div>
+    <div id="register-section" style="display: none;">
+      <h3>Register</h3>
+      <label for="register-username">Username:</label>
+      <input type="text" id="register-username">
+      <label for="register-password">Password:</label>
+      <input type="password" id="register-password">
+      <button type="button" onclick="register()">Register</button>
+      <button type="button" onclick="showLogin()">Back to Login</button>
+    </div>
+    <form id="settings-form" style="display: none;">
+      <button type="button" onclick="logout()">Logout</button>
+      <div id="settings-container" class="settings-section"></div>
+      <h3 id="total-feeds-count">Total Feeds: 0</h3>
+      <div id="feeds-container" class="feeds-section"></div>
+      <button type="button" id="add-feed-btn">Add Feed</button>
+      <button type="button" onclick="saveAccountList()">Save Account List</button>
+    </form>
+    <script>
+      let settings = {};
+      let feeds = [];
+      let interval_minutes;
+      let seconds_between_feed;
+      let webhook;
+      let customMessage;
+      async function loadSettings() {
+        try {
+          const response = await fetch('/loadSettingData');
+          if (response.status === 403) {
+            return;
+          }
+          const settingdata = await response.json();
+          settings = settingdata.values || {};
+          document.getElementById('settings-container').innerHTML = settingdata.html;
+          interval_minutes = document.getElementById('interval-minutes').value = settings.interval_minutes || '';
+          seconds_between_feed = document.getElementById('seconds-between-feeds').value = settings.seconds_between_feeds || '';
+          webhook = document.getElementById('global-webhook').value = settings.webhook || '';
+          customMessage = document.getElementById('custom-message').value = settings.customMessage || '';
+          displayFollowedAccounts();
+        } catch (error) {
+          console.error('Error loading settings:', error);
         }
       }
-    });
+      async function loadAccountList() {
+        try {
+          const response = await fetch('/loadAccountList');
+          if (response.status === 403) {
+            alert('Access denied. You do not have permission to edit this setting.');
+            return;
+          }
+          const feedData = await response.json();
+          feeds = Array.isArray(feedData.feeds) ? feedData.feeds : [];
+          displayFollowedAccounts();
+        } catch (error) {
+          console.error('Error loading settings:', error);
+        }
+      }
+      async function displayFollowedAccounts() {
+        const feedsContainer = document.getElementById('feeds-container');
+        feedsContainer.innerHTML = '';
+        feeds.forEach((feed, index) => {
+          const feedBlock = document.createElement('div');
+          feedBlock.className = 'feed-block';
+          const feedTitle = feed.username || `Feed ${index + 1}`;
+          feedBlock.innerHTML = `
+        
+									<div class="feed-title" onclick="toggleFeedContent(${index})">${feedTitle} (Click to expand)</div>
+									<div class="feed-content" id="feed-content-${index}">
+          ${createFeedInputs(index, feed)}
+          
+										<button type="button" class="remove-feed" onclick="removeFeed(${index})">Remove Feed</button>
+									</div>
+      `;
+          feedsContainer.appendChild(feedBlock);
+        });
+        document.getElementById('total-feeds-count').textContent = `Total Feeds: ${feeds.length}`;
+      }
 
-    const updatedSettings = JSON.stringify({ settings, feeds }, null, 2);
+      function createFeedInputs(index, feed) {
+        return `
+      
+									<label for="username-${index}">Username:</label>
+									<input type="text" id="username-${index}" name="username" value="${feed.username || ''}" data-index="${index}" data-field="username">
+										<label for="webhook-${index}">Webhook URL:</label>
+										<input type="text" id="webhook-${index}" name="webhook" value="${feed.webhook || ''}" data-index="${index}" data-field="webhook">
+											<label for="translate-${index}">Translate:</label>
+											<select id="translate-${index}" name="translate" data-index="${index}" data-field="translate">
+												<option value="false" ${!feed.translate ? 'selected' : ''}>False</option>
+												<option value="true" ${feed.translate ? 'selected' : ''}>True</option>
+											</select>
+    `;
+      }
 
-    try {
-      const response = await fetch('/update-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: updatedSettings,
+      function toggleFeedContent(index) {
+        const feedContent = document.getElementById(`feed-content-${index}`);
+        feedContent.style.display = feedContent.style.display === 'none' ? 'block' : 'none';
+      }
+      document.getElementById('add-feed-btn').addEventListener('click', () => {
+        feeds.push({
+          username: '',
+          webhook: '',
+          translate: false
+        });
+        displayFollowedAccounts();
       });
 
-      const result = await response.text();
-      alert(result);
-    } catch (error) {
-      alert('Error updating settings: ' + error.message);
-    }
-  });
+      function removeFeed(index) {
+        feeds.splice(index, 1);
+        displayFollowedAccounts();
+      }
+      async function testWebhook() {
+        const webhookUrl = document.getElementById('global-webhook').value;
+        const testMessage = document.getElementById('test-webhook').value || 'This is a test message from the settings panel.';
+        if (!webhookUrl) {
+          alert('Webhook URL is missing!');
+          return;
+        }
+        try {
+          const response = await fetch('/test-webhook', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: testMessage,
+              webhook: webhookUrl,
+              username: 'Test User',
+              avatarUrl: null
+            })
+          });
+          const result = await response.text();
+          alert(result);
+        } catch (error) {
+          alert('Error sending test webhook: ' + error.message);
+        }
+      }
+      if (interval_minutes && seconds_between_feed && webhook && customMessage) {
+        settings.interval_minutes = interval_minutes.value;
+        settings.seconds_between_feeds = seconds_between_feeds.value;
+        settings.webhook = webhook.value;
+        settings.customMessage = customMessage.value;
+      }
+      async function saveAccountList() {
+        document.querySelectorAll('input[data-index], select[data-index]').forEach((input) => {
+          const index = input.getAttribute('data-index');
+          const field = input.getAttribute('data-field');
+          feeds[index][field] = field === 'translate' ? input.value === 'true' : input.value;
+        });
+        try {
+          const updateAccountList = await fetch('/updateAccountList', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              feeds
+            }, null, 2),
+          });
+          const result = await updateAccountList.text();
+          alert(result);
+          loadSettings();
+          displayFollowedAccounts();
+        } catch (error) {
+          alert('Error updating settings: ' + error.message);
+        }
+      };
+      async function saveSettings() {
+        settings.interval_minutes = document.getElementById('interval-minutes').value || '';
+        settings.seconds_between_feeds = document.getElementById('seconds-between-feeds').value || '';
+        settings.webhook = document.getElementById('global-webhook').value || '';
+        settings.customMessage = document.getElementById('custom-message').value || '';
+        try {
+          const updatedSettings = await fetch('/updateSettings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              settings
+            }, null, 2),
+          });
+          const result = await updatedSettings.text();
+          alert(result);
+          loadSettings();
+        } catch (error) {
+          alert('Error updating settings: ' + error.message);
+        }
+      };
+      async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        try {
+          const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username,
+              password
+            }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            if (result.isAdmin) {
+              loadSettings();
+              loadAccountList();
+            } else {
+              loadAccountList();
+            }
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('settings-form').style.display = 'block';
+          } else {
+            alert(result.message);
+          }
+        } catch (error) {
+          alert('Error during login: ' + error.message);
+        }
+      }
+      async function logout() {
+        try {
+          const response = await fetch('/logout', {
+            method: 'POST'
+          });
+          if (response.ok) {
+            alert('Logged out successfully');
+            showLogin(); // Show login section again
+          }
+        } catch (error) {
+          alert('Error logging out: ' + error.message);
+        }
+      }
+      async function register() {
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+        try {
+          const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username,
+              password
+            }),
+          });
+          const result = await response.json();
+          alert(result.message);
+          showLogin();
+        } catch (error) {
+          alert('Error during registration: ' + error.message);
+        }
+      }
 
-  // Load settings when the page loads
-  loadSettings();
-</script>
+      function showRegister() {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('register-section').style.display = 'block';
+        document.getElementById('settings-form').style.display = 'none';
+      }
 
-</body>
+      function showLogin() {
+        document.getElementById('register-section').style.display = 'none';
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('settings-form').style.display = 'none';
+      }
+    </script>
+  </body>
 </html>

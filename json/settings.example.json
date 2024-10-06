@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "optimized_intervals": true,
+    "interval_minutes": "10",
+    "seconds_between_feeds": "10",
+    "webhook": "https://discord.com/api/webhooks",
+    "customMessage": ""
+  }
+}
