@@ -10,6 +10,12 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It s
 - Split the main function and express server into two separate files
 - 
 
+## Planned Features 
+- One webhook per acc
+- Feed remove permission for allowed users to avoid abuse
+- Maybe a discord bot later on(?)
+ 
+
 ## Changes in this fork
 - Added web panel for easier configurations (`localhost:3000`)
 - Limited to checking for new posts (Replies & Retweets are currently disabled)
