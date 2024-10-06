@@ -13,18 +13,18 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It s
 ## Changes in this fork
 - Added web panel for easier configurations (`localhost:3000`)
 - Limited to checking for new posts (Replies & Retweets are currently disabled)
-- Removed DeepL Translator since supports translations [FixTweet](https://github.com/FixTweet/FixTweet).
+- Removed DeepL Translator since [FixTweet](https://github.com/FixTweet/FixTweet) supports translations .
 - 1s Delays between every Webhook
 
 ## Usage
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/Twitter2Discord.git
+   git clone https://github.com/ivAkii/Twitter2Discord.git
    ```
-2. Copy `settings.example.json` and rename it to `settings.json`:
+2. Preparing the json files
    ```bash
-   cp settings.example.json settings.json
+   remove .example from all json file and config to your needs
    ```
 3. Install dependencies:
    ```bash
@@ -45,23 +45,17 @@ The `settings.json` file allows you to configure the following:
 ```json
 {
   "settings": {
-    "interval_minutes": "5",
-    "seconds_between_feeds": "30",
-    "webhook": "https://discord.com/api/webhooks/your-webhook-url",
-    "customMessage": "New Post Alert!"
-  },
-  "feeds": [
-    {
-      "username": "netizenakii",
-      "webhook": "", // Not implemented yet
-      "translate": false
-    }
-  ]
+    "optimized_intervals": true,
+    "interval_minutes": "10",
+    "seconds_between_feeds": "10",
+    "webhook": "https://discord.com/api/webhooks",
+    "customMessage": ""
+  }
 }
 ```
 
 ### Global Settings
-
+- **`optimized_intervals`**: Make sure the loop don't reset before going through every account in followedAccounts.json
 - **`interval_minutes`**: Time interval (in minutes) to check the feeds. Default is 5 minutes.
 - **`seconds_between_feeds`**: Delay (in seconds) between checking each feed, to prevent rate limiting. Default is 30 seconds.
 - **`webhook`**: The Discord webhook URL used for posting.
@@ -75,4 +69,4 @@ The `feeds` array allows you to define multiple feeds, each with its own setting
 - **`webhook`**: A custom Discord webhook URL for this specific feed (feature coming soon).
 - **`translate`**: Set to `true` to translate posts to English.
 
-You can manage and add more feeds directly from the web panel.
+You can manage and add more accoutns directly from the web panel.
