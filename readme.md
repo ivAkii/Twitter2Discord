@@ -7,7 +7,7 @@ This script posts Twitter feeds to a Discord webhook via a Nitter RSS feed. It s
 - Optimized workflow
 - Added simple login interface to web panel to prevent others from altering your data
 - Added optimized time intervals (It is highly recommended to leave this on)
-- Split the main function and express servers into two separate files
+- Split the main function and express server into two separate files
 - 
 
 ## Changes in this fork
